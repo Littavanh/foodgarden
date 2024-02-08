@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "678524558152",
+    "project_id": "itecpay-40e77",
+    "storage_bucket": "itecpay-40e77.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:678524558152:android:6b080245c0af74e11f317d",
+        "android_client_info": {
+          "package_name": "com.example.itec_pay"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "678524558152-hurn5qhmpsob84iu0ndjcf9kbkri6k3c.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.itec_pay",
+            "certificate_hash": "b990b55dadca5b7de49a7e9cc083d57807c9fcfc"
+          }
+        },
+        {
+          "client_id": "678524558152-fvtf0okp0g87lhskf0ip6t4sh087fpnb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqM4XZFquhM_XQ_EcrWYrdrRO2KPmEwjo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "678524558152-fvtf0okp0g87lhskf0ip6t4sh087fpnb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
