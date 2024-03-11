@@ -44,7 +44,8 @@ class _HistoryState extends State<History> {
     if (picked != null)
       setState(() {
         selectedDateFrom = picked;
-        _dateFromController.text = DateFormat('yyyy-MM-dd').format(selectedDateFrom);
+        _dateFromController.text =
+            DateFormat('yyyy-MM-dd').format(selectedDateFrom);
         print("date from: ${_dateFromController.text}");
       });
   }
@@ -61,7 +62,8 @@ class _HistoryState extends State<History> {
         selectedDateTo = picked1;
 
         // _dateToController.text = DateFormat.yMd().format(selectedDateTo);
-        _dateToController.text = DateFormat('yyyy-MM-dd').format(selectedDateTo);
+        _dateToController.text =
+            DateFormat('yyyy-MM-dd').format(selectedDateTo);
         print(" date to :${_dateToController.text}");
       });
   }
@@ -116,101 +118,15 @@ class _HistoryState extends State<History> {
           actions: [
             IconButton(
                 onPressed: () async {
-// int tal = 0;
-//  for (var i = 0; i < res.length; i++) {
-//      int balance = res[i].balance!.toInt();
-//                   tal = tal + balance;
-//   print(res[i].balance);
-//  print(res[i].regCard);
+                  // int tal = 0;
+                  //  for (var i = 0; i < res.length; i++) {
+                  //      int balance = res[i].balance!.toInt();
+                  //                   tal = tal + balance;
+                  //   print(res[i].balance);
+                  //  print(res[i].regCard);
 
-//                       }
-int tal = 0;
- List res = await DataModel.fecthSaleHistory(
-                      Passkey: lotp,
-                      userId: lUserId!,
-                      startDate: _dateFromController.text,
-                      endDate: _dateToController.text,
-                      merchantId: int.parse(lmerchantId));
- await SunmiPrinter.initPrinter();
-  await  SunmiPrinter.startTransactionPrint(true);
-   await SunmiPrinter.printText(
-      "ໃບບິນສະຫຼຸບການຂາຍ",
-      style: SunmiStyle(
-          align: SunmiPrintAlign.CENTER,
-          bold: true,
-          fontSize: SunmiFontSize.MD),
-    );
-
-  await  SunmiPrinter.printText(
-      "****************************",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.CENTER, fontSize: SunmiFontSize.SM),
-    );
-    //  SunmiPrinter.lineWrap(1);
- await   SunmiPrinter.printText(
-      "ແຕ່ວັນທີ: ${_dateFromController.text}",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
-    );
-  await  SunmiPrinter.printText(
-      "ຫາວັນທີ: ${_dateToController.text}",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
-    );
- 
-
-  await  SunmiPrinter.lineWrap(1);
-   await SunmiPrinter.printText(
-      "ລາຍລະອຽດ: -------------------",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
-    );
-      
-                      for (var item in res) {
-                         int balance = item.balance.toInt();
-                  tal = tal + balance;
-   await SunmiPrinter.printText(
-      "Bill No:#${item.billNo},RegCard:${item.regCard},CardId:${item.cardId}",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
-    );
-  await  SunmiPrinter.printText(
-      "ວັນທີ: ${item.dateAdd}",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
-    );
-   
-  await  SunmiPrinter.printText(
-      "ລາຄາ ${NumberFormat.decimalPattern().format(item.balance)} ກີບ",
-      style: SunmiStyle(
-        align: SunmiPrintAlign.RIGHT,
-        fontSize: SunmiFontSize.MD,
-      ),
-    );
-         }
-      await SunmiPrinter.printText(
-      "-----------------------------",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
-    );
-     await  SunmiPrinter.printText(
-      "ຈຳນວນລາຍການ: ${res.length}",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD, bold: true,),
-    );
-  await  SunmiPrinter.printText(
-      "ລວມຍອດ: ${NumberFormat.decimalPattern().format(tal)} ກີບ",
-      style:
-          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD, bold: true,),
-    );
-   
-
-
-                       
-                 
-
-                       SunmiPrinter.lineWrap(3);
-    SunmiPrinter.exitTransactionPrint(true);
+                  //                       }
+                  await build_print();
                 },
                 tooltip: 'Upload',
                 icon: const Icon(Icons.download_rounded, color: iconColor)),
@@ -469,9 +385,97 @@ int tal = 0;
         ));
   }
 
-  Future<void> printSlip() async {
+  Future<void> build_print() async {
+    int tal = 0;
+    List res = await DataModel.fecthSaleHistory(
+        Passkey: lotp,
+        userId: lUserId!,
+        startDate: _dateFromController.text,
+        endDate: _dateToController.text,
+        merchantId: int.parse(lmerchantId));
+    await SunmiPrinter.initPrinter();
+    await SunmiPrinter.startTransactionPrint(true);
+    await SunmiPrinter.printText(
+      "ໃບບິນສະຫຼຸບການຂາຍ",
+      style: SunmiStyle(
+          align: SunmiPrintAlign.CENTER,
+          bold: true,
+          fontSize: SunmiFontSize.MD),
+    );
 
-  
+    await SunmiPrinter.printText(
+      "****************************",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.CENTER, fontSize: SunmiFontSize.SM),
+    );
+    //  SunmiPrinter.lineWrap(1);
+    await SunmiPrinter.printText(
+      "ແຕ່ວັນທີ: ${_dateFromController.text}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ຫາວັນທີ: ${_dateToController.text}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+
+    await SunmiPrinter.lineWrap(1);
+    await SunmiPrinter.printText(
+      "ລາຍລະອຽດ: -------------------",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+
+    for (var item in res) {
+      int balance = item.balance.toInt();
+      tal = tal + balance;
+      await SunmiPrinter.printText(
+        "Bill No:#${item.billNo},RegCard:${item.regCard},CardId:${item.cardId}",
+        style:
+            SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+      );
+      await SunmiPrinter.printText(
+        "ວັນທີ: ${item.dateAdd}",
+        style:
+            SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+      );
+
+      await SunmiPrinter.printText(
+        "ລາຄາ ${NumberFormat.decimalPattern().format(item.balance)} ກີບ",
+        style: SunmiStyle(
+          align: SunmiPrintAlign.RIGHT,
+          fontSize: SunmiFontSize.MD,
+        ),
+      );
+    }
+    await SunmiPrinter.printText(
+      "-----------------------------",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ຈຳນວນລາຍການ: ${res.length}",
+      style: SunmiStyle(
+        align: SunmiPrintAlign.LEFT,
+        fontSize: SunmiFontSize.MD,
+        bold: true,
+      ),
+    );
+    await SunmiPrinter.printText(
+      "ລວມຍອດ: ${NumberFormat.decimalPattern().format(tal)} ກີບ",
+      style: SunmiStyle(
+        align: SunmiPrintAlign.LEFT,
+        fontSize: SunmiFontSize.MD,
+        bold: true,
+      ),
+    );
+
+    SunmiPrinter.lineWrap(3);
+    SunmiPrinter.exitTransactionPrint(true);
+  }
+
+  Future<void> printSlip() async {
     SunmiPrinter.initPrinter();
     SunmiPrinter.startTransactionPrint(true);
     SunmiPrinter.printText(

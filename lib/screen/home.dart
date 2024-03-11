@@ -19,6 +19,9 @@ import 'package:foodgarden/page/settings.dart';
 import 'package:foodgarden/screen/read_data_screen.dart';
 import 'package:foodgarden/style/color.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sunmi_printer_plus/enums.dart';
+import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
+import 'package:sunmi_printer_plus/sunmi_style.dart';
 
 import '../component/component.dart';
 
@@ -34,12 +37,43 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   String _serialNumber = "unknown";
-
+  bool printBinded = false;
+  int paperSize = 0;
+  String serialNumber = "";
+  String printerVersion = "";
   //
+  Future<bool?> _bindingPrinter() async {
+    final bool? result = await SunmiPrinter.bindingPrinter();
+    return result;
+  }
 
   @override
   void initState() {
     super.initState();
+    _bindingPrinter().then((bool? isBind) async {
+      SunmiPrinter.paperSize().then((int size) {
+        setState(() {
+          paperSize = size;
+        });
+      });
+
+      SunmiPrinter.printerVersion().then((String version) {
+        setState(() {
+          printerVersion = version;
+        });
+      });
+
+      SunmiPrinter.serialNumber().then((String serial) {
+        setState(() {
+          serialNumber = serial;
+        });
+      });
+
+      setState(() {
+        printBinded = isBind!;
+      });
+    });
+
     initPlatformState();
 
     Timer.periodic(
@@ -107,18 +141,108 @@ class _HomeScreenState extends State<HomeScreen> {
         showNotification(notiText, flp);
 
         // ignore: use_build_context_synchronously
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) =>  NotiAutoPrint(transactionId: response.data["transactionId"],merchantId: lmerchantId,cardNo: response.data["cardNo"],billNo: response.data["billNo"],saleAmount: response.data["saleAmount"],totalBalance: response.data["totalBalance"],saleDate: response.data["saleDate"])),
-        );
-
-        await billPrintSuccess(token, transactionId, dio, url);
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) =>
+        //NotiAutoPrint(transactionId: response.data["transactionId"],merchantId: lmerchantId,cardNo: response.data["cardNo"],
+        //billNo: response.data["billNo"],saleAmount: response.data["saleAmount"],totalBalance: response.data["totalBalance"],
+        //saleDate: response.data["saleDate"])),
+        // );
+        printSlip(
+            token: token,
+            dio: dio,
+            url: url,
+            companyName: lcompanyName,
+            transactionId: transactionId,
+            merchantId: lmerchantId,
+            cardNo: response.data["cardNo"],
+            billNo: response.data["billNo"],
+            saleAmount: response.data["saleAmount"],
+            totalBalance: response.data["totalBalance"],
+            saleDate: response.data["saleDate"]);
       } else {
         print("no have bill to print");
       }
     } else {
       print(response.statusMessage);
     }
+  }
+
+  Future<void> printSlip(
+      {required String token,
+      required Dio dio,
+      required String url,
+      required String companyName,
+      required String transactionId,
+      required String merchantId,
+      required String cardNo,
+      required String billNo,
+      required String saleAmount,
+      required String totalBalance,
+      required String saleDate}) async {
+    print('printslip: $companyName,$transactionId,$merchantId');
+    await SunmiPrinter.initPrinter();
+    await SunmiPrinter.startTransactionPrint(true);
+    await SunmiPrinter.printText(
+      companyName,
+      style: SunmiStyle(
+          align: SunmiPrintAlign.CENTER,
+          bold: true,
+          fontSize: SunmiFontSize.MD),
+    );
+
+    await SunmiPrinter.printText(
+      "****************************",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.CENTER, fontSize: SunmiFontSize.SM),
+    );
+
+    await SunmiPrinter.lineWrap(1);
+    await SunmiPrinter.printText(
+      "ລະຫັດຮ້ານຄ້າ/MERCHANT ID ${merchantId.padLeft(4, '0')}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ລະຫັດບັດ/CARD NO $cardNo",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ເລກບິນ/REF NO $transactionId",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ຈຳນວນຂາຍ/SALE AMOUNT $saleAmount",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ຍອດເງິນຍັງເຫຼືອ/BALANCE $totalBalance",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ວັນທີຂາຍ/DATE $saleDate",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "****************************",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.CENTER, fontSize: SunmiFontSize.SM),
+    );
+    await SunmiPrinter.printText(
+      lfooter,
+      style: SunmiStyle(
+          align: SunmiPrintAlign.CENTER,
+          fontSize: SunmiFontSize.MD,
+          bold: true),
+    );
+    await billPrintSuccess(token, transactionId, dio, url);
+    await SunmiPrinter.lineWrap(3);
+    await SunmiPrinter.exitTransactionPrint(true);
   }
 
   Future<void> billPrintSuccess(

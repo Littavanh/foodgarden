@@ -1,9 +1,11 @@
 import 'dart:convert';
 import 'dart:ffi';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:foodgarden/page/generate_qr_code.dart';
 import 'package:foodgarden/page/qr_image.dart';
+import 'package:foodgarden/style/color.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -22,6 +24,8 @@ import '../app_config/common/app_strings.dart';
 import '../app_config/common/widget/app_snackbar.dart';
 import '../model/checkbalanceModel.dart';
 import 'package:convert/src/hex.dart';
+
+import '../model/saleHistoryModel.dart';
 
 class DoPayment extends StatefulWidget {
   const DoPayment({super.key});
@@ -58,9 +62,50 @@ class _DoPaymentState extends State<DoPayment> {
   int paperSize = 0;
   String serialNumber = "";
   String printerVersion = "";
+  DateTime selectedDateFrom = DateTime.now();
+  DateTime selectedDateTo = DateTime.now();
+  TextEditingController _dateFromController = TextEditingController();
+  TextEditingController _dateToController = TextEditingController();
+
+  Future<Null> _selectDateFrom(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: selectedDateFrom,
+        initialDatePickerMode: DatePickerMode.day,
+        firstDate: DateTime(2015),
+        lastDate: DateTime(2101));
+    if (picked != null)
+      setState(() {
+        selectedDateFrom = picked;
+        _dateFromController.text =
+            DateFormat('yyyy-MM-dd').format(selectedDateFrom);
+        print("date from: ${_dateFromController.text}");
+      });
+  }
+
+  Future<Null> _selectDateTo(BuildContext context) async {
+    final DateTime? picked1 = await showDatePicker(
+        context: context,
+        initialDate: selectedDateTo,
+        initialDatePickerMode: DatePickerMode.day,
+        firstDate: DateTime(2015),
+        lastDate: DateTime(2101));
+    if (picked1 != null)
+      setState(() {
+        selectedDateTo = picked1;
+
+        // _dateToController.text = DateFormat.yMd().format(selectedDateTo);
+        _dateToController.text =
+            DateFormat('yyyy-MM-dd').format(selectedDateTo);
+        print(" date to :${_dateToController.text}");
+      });
+  }
+
   @override
   void initState() {
     // popupCard();
+    _dateFromController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    _dateToController.text = DateFormat('yyyy-MM-dd').format(DateTime.now());
     _nfcManager = NfcManager.instance;
     if (Platform.isAndroid) {
       _getNFCSupport();
@@ -188,7 +233,7 @@ class _DoPaymentState extends State<DoPayment> {
         print("responseSaleTransfer -> ${response.body}");
 
         var c = print_count;
-        
+
         do {
           await printSlip(
               lcompanyName,
@@ -223,7 +268,16 @@ class _DoPaymentState extends State<DoPayment> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('ບັນທຶກການຂາຍ'),
+        actions: [
+          IconButton(
+              onPressed: () {
+                build_print();
+              },
+              tooltip: 'Printing Current Bill ',
+              icon: const Icon(Icons.download_rounded, color: iconColor)),
+        ],
       ),
+
       body: _isLoading
           ? const Center(
               child: CircularProgressIndicator.adaptive(),
@@ -231,6 +285,7 @@ class _DoPaymentState extends State<DoPayment> {
           : _isNfcSupportedDevice
               ? _nfcSupportedDeviceView()
               : _nfcSupportedDeviceErrorView(),
+
       // floatingActionButton: Container(
       //   height: 80.0,
       //   width: 80.0,
@@ -538,15 +593,15 @@ class _DoPaymentState extends State<DoPayment> {
             //           );
             //         },
             //       )
-                // :
-                 Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: ((context) {
-                        return QRImage(lshopCode, result);
-                      }),
-                    ),
-                  );
+            // :
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: ((context) {
+                  return QRImage(lshopCode, result);
+                }),
+              ),
+            );
           },
           child: Text(
             text,
@@ -631,6 +686,92 @@ class _DoPaymentState extends State<DoPayment> {
     } catch (e) {
       debugPrint(e.toString());
     }
+  }
+
+  Future<void> build_print() async {
+    double balance = 0.0;
+    int cardId = 0;
+    String billNo = "";
+    double total_balance = 0.0;
+    String date_add = "";
+
+    List res = await DataModel.fecthSaleHistory(
+        Passkey: lotp,
+        userId: lUserId!,
+        startDate: _dateFromController.text,
+        endDate: _dateToController.text,
+        merchantId: int.parse(lmerchantId));
+
+    for (var item in res) {
+      balance = item.balance;
+      cardId = item.cardId;
+      billNo = item.billNo;
+      total_balance = item.totalBalance;
+      date_add = item.dateAdd.toString();
+    }
+
+    await SunmiPrinter.initPrinter();
+    await SunmiPrinter.startTransactionPrint(true);
+    await SunmiPrinter.printText(
+      lcompanyName,
+      style: SunmiStyle(
+          align: SunmiPrintAlign.CENTER,
+          bold: true,
+          fontSize: SunmiFontSize.MD),
+    );
+
+    await SunmiPrinter.printText(
+      "****************************",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.CENTER, fontSize: SunmiFontSize.SM),
+    );
+
+    await SunmiPrinter.lineWrap(1);
+    await SunmiPrinter.printText(
+      "ລະຫັດຮ້ານຄ້າ/MERCHANT ID ${lmerchantId.padLeft(4, '0')}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ລະຫັດບັດ/CARD NO $cardId",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ເລກບິນ/REF NO $billNo",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ຈຳນວນຂາຍ/SALE AMOUNT ${NumberFormat.decimalPattern().format(balance)}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ຍອດເງິນຍັງເຫຼືອ/BALANCE ${NumberFormat.decimalPattern().format(total_balance)}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "ວັນທີຂາຍ/DATE ${date_add.toString()}",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.LEFT, fontSize: SunmiFontSize.MD),
+    );
+    await SunmiPrinter.printText(
+      "****************************",
+      style:
+          SunmiStyle(align: SunmiPrintAlign.CENTER, fontSize: SunmiFontSize.SM),
+    );
+    await SunmiPrinter.printText(
+      lfooter,
+      style: SunmiStyle(
+          align: SunmiPrintAlign.CENTER,
+          fontSize: SunmiFontSize.MD,
+          bold: true),
+    );
+
+    await SunmiPrinter.lineWrap(3);
+    await SunmiPrinter.exitTransactionPrint(true);
   }
 
   Future<void> checkBalance(BuildContext context, NfcTag tag) async {
@@ -725,7 +866,7 @@ class _DoPaymentState extends State<DoPayment> {
     var endBa = LcardTotalBalance - result;
     endBal = f.format(endBa);
     print(endBal);
- 
+
     var b = DateFormat('yyMMdd');
     bill = b.format(DateTime.now());
     var billcount = 1.toString();
@@ -857,7 +998,7 @@ class _DoPaymentState extends State<DoPayment> {
     await SunmiPrinter.exitTransactionPrint(true);
   }
 
-   loadQuickButton() async {
+  loadQuickButton() async {
     var pref = await SharedPreferences.getInstance();
 
     setState(() {
@@ -870,7 +1011,7 @@ class _DoPaymentState extends State<DoPayment> {
       btn_7 = pref.getString("num_7") ?? "50000";
       btn_8 = pref.getString("num_8") ?? "70000";
       btn_9 = pref.getString("num_9") ?? "100000";
-    print_count = pref.getInt("print_count") ?? 1;
+      print_count = pref.getInt("print_count") ?? 1;
     });
 
     print("loadQuickButton ===> button3: $btn_3 , button1: $btn_1");
