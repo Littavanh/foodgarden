@@ -97,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
         print(json.encode(response.data));
         print("print Bill");
 
-// show notification
+        // show notification
         FlutterLocalNotificationsPlugin flp = FlutterLocalNotificationsPlugin();
         var android = AndroidInitializationSettings('@mipmap/ic_launcher');
         // var iOS = IOSInitializationSettings();
