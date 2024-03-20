@@ -15,6 +15,7 @@ import 'package:foodgarden/page/dopayment.dart';
 import 'package:foodgarden/page/history.dart';
 import 'package:foodgarden/page/noti_auto_print.dart';
 import 'package:foodgarden/page/printReciept.dart';
+import 'package:foodgarden/page/result.dart';
 import 'package:foodgarden/page/settings.dart';
 import 'package:foodgarden/screen/read_data_screen.dart';
 import 'package:foodgarden/style/color.dart';
@@ -160,6 +161,11 @@ class _HomeScreenState extends State<HomeScreen> {
             saleAmount: response.data["saleAmount"],
             totalBalance: response.data["totalBalance"],
             saleDate: response.data["saleDate"]);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) =>  ResultPage(saleAmount: response.data["saleAmount"])),
+        );
       } else {
         print("no have bill to print");
       }
