@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+
 class ResultPage extends StatefulWidget {
   const ResultPage({
     required this.saleAmount,
@@ -19,7 +20,9 @@ class _ResultPageState extends State<ResultPage> {
   @override
   void initState() {
     // TODO: implement initState
+
     super.initState();
+   
     Timer.periodic(
         const Duration(seconds: 5), (timer) => Navigator.pop(context));
   }
